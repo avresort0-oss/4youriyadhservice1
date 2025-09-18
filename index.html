@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>4Your Riyadh Service</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<style>
+body{margin:0;font-family:sans-serif;background:#f0f0f0;}
+.container{max-width:1200px;margin:auto;background:#fff;padding:20px;border-radius:10px;}
+.logo-container img{max-width:150px;max-height:80px;}
+.hero{text-align:center;padding:20px;}
+.whatsapp-btn, .exclusive-btn{display:inline-block;padding:10px 20px;margin:10px;background:#25D366;color:#fff;border:none;border-radius:5px;text-decoration:none;}
+.gallery-slider{display:flex;overflow:hidden;transition:0.5s;}
+.gallery-slider img{width:100%;flex-shrink:0;border-radius:10px;}
+.thumbnail-container{display:flex;justify-content:center;margin-top:10px;}
+.thumbnail{width:60px;height:40px;margin:0 5px;cursor:pointer;border:2px solid transparent;border-radius:5px;}
+.thumbnail.active{border-color:#25D366;}
+.admin-panel{margin-top:30px;padding:10px;background:#f9f9f9;border-radius:10px;}
+</style>
+</head>
+<body>
+<div class="container">
+  <header>
+    <div class="logo-container" id="logo-container">
+      <img src="assets/logo.png" alt="Logo">
+    </div>
+  </header>
+
+  <section class="hero">
+    <h1>Contact Us Through WhatsApp</h1>
+    <p>High-quality services in Riyadh, Saudi Arabia.</p>
+    <a href="#" class="whatsapp-btn" id="whatsapp-button"><i class="fab fa-whatsapp"></i> Contact on WhatsApp</a>
+    <div id="subscriber-exclusive" style="display:none;">
+      <a href="#" class="exclusive-btn" id="exclusive-button"><i class="fab fa-whatsapp"></i> Subscriber WhatsApp</a>
+    </div>
+  </section>
+
+  <section class="image-gallery">
+    <h2>Our Services</h2>
+    <div class="gallery-slider" id="gallery-slider"></div>
+    <div class="thumbnail-container" id="thumbnail-container"></div>
+  </section>
+
+  <section class="admin-panel">
+    <h3>Admin Panel</h3>
+    <label>WhatsApp Link:</label>
+    <input type="text" id="whatsapp-link" placeholder="https://wa.me/..."><br>
+    <label>Exclusive Subscriber WhatsApp Link:</label>
+    <input type="text" id="exclusive-link" placeholder="https://chat.whatsapp.com/..."><br>
+    <button id="save-settings">Save Settings</button>
+  </section>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script>
+const firebaseConfig = {
+  apiKey: "YOUR_API_KEY",
+  authDomain: "YOUR_PROJECT.firebaseapp.com",
+  projectId: "YOUR_PROJECT_ID",
+  storageBucket: "YOUR_PROJECT.appspot.com",
+  messagingSenderId: "YOUR_SENDER_ID",
+  appId: "YOUR_APP_ID"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+
+// Riyadh-only restriction
+const userCity="Riyadh";
+if(userCity!=="Riyadh"){
+  document.body.innerHTML="<h2>Sorry, service available only in Riyadh.</h2>";
+}
+
+// Save Settings
+document.getElementById('save-settings').addEventListener('click',async()=>{
+  const whatsapp=document.getElementById('whatsapp-link').value;
+  const exclusive=document.getElementById('exclusive-link').value;
+  await db.collection('settings').doc('main').set({whatsappLink:whatsapp,exclusiveLink:exclusive},{merge:true});
+  alert("Settings saved!");
+  loadSettings();
+});
+
+// Load Settings
+async function loadSettings(){
+  const doc=await db.collection('settings').doc('main').get();
+  if(doc.exists){
+    const data=doc.data();
+    if(data.whatsappLink) document.getElementById('whatsapp-button').href=data.whatsappLink;
+    if(data.exclusiveLink) {
+      document.getElementById('exclusive-button').href=data.exclusiveLink;
+      document.getElementById('subscriber-exclusive').style.display="block";
+    }
+  }
+}
+
+// Gallery with assets
+let galleryImages=[
+  'assets/service1.jpg',
+  'assets/service2.jpg',
+  'assets/service3.jpg'
+];
+let currentIndex=0;
+function updateGallerySlider(){
+  const slider=document.getElementById('gallery-slider');
+  slider.innerHTML='';
+  galleryImages.forEach((img,i)=>{
+    const el=document.createElement('img');
+    el.src=img;
+    slider.appendChild(el);
+    el.addEventListener('click',()=>alert('Lightbox demo: '+img));
+  });
+  updateThumbnails();
+}
+function updateThumbnails(){
+  const thumbs=document.getElementById('thumbnail-container');
+  thumbs.innerHTML='';
+  galleryImages.forEach((img,i)=>{
+    const t=document.createElement('img');
+    t.src=img;
+    t.className='thumbnail'+(i===currentIndex?' active':'');
+    t.addEventListener('click',()=>{currentIndex=i;showImage(i);});
+    thumbs.appendChild(t);
+  });
+}
+function showImage(i){
+  currentIndex=i;
+  const slider=document.getElementById('gallery-slider');
+  slider.style.transform=`translateX(-${i*100}%)`;
+  updateThumbnails();
+}
+
+loadSettings();
+updateGallerySlider();
+</script>
+</body>
+</html>
